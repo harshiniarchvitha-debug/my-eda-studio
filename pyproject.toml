@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "my_eda_cli"
+version = "0.1.0"
+dependencies = [
+    "pandas",
+    "click",
+    "jinja2",
+    "pyarrow"
+]
+
+[project.scripts]
+eda-report = "my_eda_cli.cli:main"
+
+[theme]
+primaryColor = "#1b263b"
+backgroundColor = "#f7f5f0"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#1b263b"
+font = "sans serif"

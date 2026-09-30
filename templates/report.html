@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Data Quality & EDA Report</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap">
+  <style>
+    :root {
+      --bg-color: #f7f5f0;          /* Warm Parchment / Ecru */
+      --card-bg: #ffffff;           /* Crisp Cream */
+      --navy-primary: #1b263b;      /* Deep Oxford Navy */
+      --navy-dark: #0d1b2a;         /* Midnight Navy */
+      --gold-accent: #c5a059;       /* Vintage Antique Gold */
+      --text-dark: #2b2d42;         /* Charcoal Ink */
+      --text-muted: #6c757d;        /* Soft Slate */
+      --border-color: #e2dcd3;     /* Subtle Tan Border */
+      --alert-burgundy: #8b263e;    /* Rich Oxford Burgundy */
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-dark);
+      margin: 0;
+      padding: 2.5rem;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .header-card {
+      background: var(--navy-dark);
+      color: #ffffff;
+      padding: 2.5rem;
+      border-radius: 4px;
+      border-top: 4px solid var(--gold-accent);
+      margin-bottom: 2rem;
+      box-shadow: 0 10px 30px rgba(13, 27, 42, 0.08);
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.5rem 0;
+      color: #ffffff;
+    }
+
+    .subtitle {
+      color: var(--gold-accent);
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      font-weight: 600;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    h2 {
+      font-family: 'Playfair Display', serif;
+      color: var(--navy-primary);
+      font-size: 1.5rem;
+      margin-top: 0;
+      margin-bottom: 1.2rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.6rem;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .metric-box {
+      border-left: 3px solid var(--gold-accent);
+      padding-left: 1rem;
+    }
+
+    .metric-value {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--navy-dark);
+    }
+
+    .metric-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th {
+      font-family: 'Playfair Display', serif;
+      background-color: #fcfbf9;
+      color: var(--navy-primary);
+      font-weight: 600;
+      text-align: left;
+      padding: 1rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    td {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.95rem;
+    }
+
+    .badge {
+      background-color: var(--alert-burgundy);
+      color: #ffffff;
+      padding: 3px 10px;
+      border-radius: 2px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .chart-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-card">
+      <div class="subtitle">Executive Intelligence Brief</div>
+      <h1>Data Health & Exploratory Analysis</h1>
+    </div>
+
+    <div class="card">
+      <h2>Overview</h2>
+      <div class="overview-grid">
+        <div class="metric-box">
+          <div class="metric-value">{{ quality.total_rows }}</div>
+          <div class="metric-label">Total Observations</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value">{{ quality.total_columns }}</div>
+          <div class="metric-label">Attributes</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value">{{ quality.duplicate_rows }}</div>
+          <div class="metric-label">Duplicate Rows</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Missing Data Audit</h2>
+      {% if quality.missing_summary %}
+      <table>
+        <thead>
+          <tr>
+            <th>Attribute</th>
+            <th>Missing Count</th>
+            <th>Proportion</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in quality.missing_summary %}
+          <tr>
+            <td><code>{{ row.column }}</code></td>
+            <td>{{ row.missing_count }}</td>
+            <td><span class="badge">{{ row.missing_pct }}%</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p style="color: var(--text-muted);">No missing values detected across dataset attributes.</p>
+      {% endif %}
+    </div>
+
+    {% if stats.charts %}
+    <div class="card">
+      <h2>Attribute Distributions</h2>
+      <div class="chart-grid">
+        {% for chart in stats.charts %}
+          <div>{{ chart | safe }}</div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</body>
+</html>
