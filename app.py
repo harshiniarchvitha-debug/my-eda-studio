@@ -1,133 +1,36 @@
 import streamlit as st
 import pandas as pd
-import streamlit.components.v1 as components
-import tempfile
+import plotly.express as px
 
-from my_eda_cli.quality import assess_quality
-from my_eda_cli.stats import generate_stats
-from my_eda_cli.reporter import render_report
+st.title("Data EDA Studio")
 
-st.set_page_config(page_title="Data EDA Studio", layout="wide")
-
-st.markdown("""
-    <style>
-    /* 1. Main Background and Base Typography */
-    .stApp {
-        background-color: #f7f5f0 !important;
-        color: #0d1b2a !important;
-    }
-    
-    h1 {
-        font-family: 'Georgia', serif !important;
-        color: #0d1b2a !important;
-        font-weight: 700;
-    }
-    
-    [data-testid="stCaptionContainer"] {
-        color: #c5a059 !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.12em !important;
-    }
-
-    /* 2. Fix Section Label Above File Uploader */
-    [data-testid="stFileUploader"] label {
-        color: #0d1b2a !important;
-        font-weight: 700 !important;
-        font-size: 1.1rem !important;
-    }
-
-    /* 3. Outer File Uploader Card Container */
-    [data-testid="stFileUploader"] {
-        background-color: #ffffff !important;
-        border: 1px solid #e2dcd3 !important;
-        border-radius: 6px !important;
-        padding: 1rem !important;
-    }
-
-    /* 4. Dashed Drag & Drop Box */
-    [data-testid="stFileUploaderDropzone"] {
-        background-color: #fcfbf9 !important;
-        border: 2px dashed #c5a059 !important;
-    }
-
-    /* 5. Drag & Drop Text ("Drag and drop file here", "Limit 200MB...") */
-    [data-testid="stFileUploaderDropzoneInstructions"] div,
-    [data-testid="stFileUploaderDropzoneInstructions"] span,
-    [data-testid="stFileUploaderDropzoneInstructions"] small {
-        color: #0d1b2a !important;
-        font-weight: 600 !important;
-    }
-
-    /* 6. Fix "Browse files" Button */
-    [data-testid="stFileUploaderDropzone"] button {
-        background-color: #1b263b !important;
-        color: #ffffff !important;
-        border: 1px solid #c5a059 !important;
-        border-radius: 4px !important;
-        font-weight: 700 !important;
-    }
-
-    [data-testid="stFileUploaderDropzone"] button * {
-        color: #ffffff !important;
-    }
-
-    [data-testid="stFileUploaderDropzone"] button:hover {
-        background-color: #0d1b2a !important;
-        border-color: #ffffff !important;
-    }
-
-    /* 7. Fix Uploaded File Name, File Size, and Delete Icon */
-    [data-testid="stUploadedFileData"] {
-        background-color: #e2dcd3 !important;
-        border-radius: 4px !important;
-    }
-
-    [data-testid="stUploadedFileData"] * {
-        color: #0d1b2a !important;
-        font-weight: 700 !important;
-    }
-
-    /* 8. Download Report Button Styling */
-    .stDownloadButton>button {
-        background-color: #1b263b !important;
-        color: #ffffff !important;
-        border: 1px solid #c5a059 !important;
-        border-radius: 4px !important;
-        font-weight: 700 !important;
-        padding: 0.6rem 2rem !important;
-        font-size: 1rem !important;
-    }
-
-    .stDownloadButton>button:hover {
-        background-color: #0d1b2a !important;
-        border-color: #ffffff !important;
-        color: #ffffff !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-st.title("🏛️ Data EDA Studio")
-st.caption("ELEGANT AUTOMATED DATA AUDITING & ANALYTICS")
-
-uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
+uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-    st.success("Dataset loaded successfully.")
+    
+    # =========================================================
+    # PASTE YOUR CODE RIGHT HERE (BEFORE PLOTTING)
+    # =========================================================
+    if 'Year' in df.columns and 'Value' in df.columns:
+        st.subheader("Financial Metrics Over Time")
 
-    quality = assess_quality(df)
-    stats = generate_stats(df)
+        # 1. Clean commas out of string formatted numbers
+        df['Value'] = df['Value'].astype(str).str.replace(',', '')
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp:
-        render_report(quality, stats, tmp.name)
-        with open(tmp.name, "r", encoding="utf-8") as f:
-            html_content = f.read()
+        # 2. Safely convert to numeric
+        df['Value'] = pd.to_numeric(df['Value'], errors='coerce')
 
-    components.html(html_content, height=850, scrolling=True)
+        # 3. Aggregate by Year
+        annual_summary = df.groupby('Year', as_index=False)['Value'].sum()
 
-    st.download_button(
-        label="📥 Download Executive Report",
-        data=html_content,
-        file_name="eda_report.html",
-        mime="text/html"
-    )
+        # 4. Plot full timeline
+        fig = px.bar(
+            annual_summary, 
+            x='Year', 
+            y='Value', 
+            title='Total Annual Financial Value Across All Industries'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.dataframe(df)
